@@ -2,6 +2,7 @@ fabric (1.7.0-1) UNRELEASED; urgency=low
 
   * New upstream release.
     Thanks to Rodney Lorrimar <rlorrimar@ccg.murdoch.edu.au>.
+  * Drop 01-paramiko.diff - equivalent change made upstream.
 
  -- Chris Lamb <lamby@debian.org>  Tue, 06 Aug 2013 12:02:10 +0100
 
