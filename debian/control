@@ -1,7 +1,7 @@
 Source: fabric
 Section: net
 Priority: optional
-Maintainer: Chris Lamb <lamby@debian.org>
+Maintainer: Debian QA Group <packages@qa.debian.org>
 Build-Depends: debhelper (>= 7.0.50~), python-all (>= 2.6.6-3~)
 Build-Depends-Indep: python-setuptools, python-sphinx, python-paramiko
 Standards-Version: 3.9.3
