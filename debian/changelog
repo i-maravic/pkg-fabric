@@ -1,3 +1,17 @@
+fabric (1.8.2-1) unstable; urgency=medium
+
+  * New upstream release.
+  * New maintainer. (Closes: #738292)
+  * Bump debian/compat to 8
+  * Update Standards-Version: 3.9.5, no changes required.
+  * Change Vcs-Git and Vcs-Git fields to my github copy.
+  * Modify debian/copyright to add myself in the packaging copyright.
+  * Add patch no_adsense.patch, to remove Google Adsense in the html documentation.
+  * Disable sphinx extension "releases", it is not included in Debian. See
+    patch disable_sphinx_extension.patch.
+
+ -- Ana Beatriz Guerrero Lopez <ana@debian.org>  Sat, 22 Feb 2014 23:01:27 +0100
+
 fabric (1.7.0-2) unstable; urgency=medium
 
   * Orphaning package.
