@@ -1,0 +1,86 @@
+Index: python-fabric/fabric/tasks.py
+===================================================================
+--- python-fabric.orig/fabric/tasks.py	2014-02-14 17:28:56.000000000 +0000
++++ python-fabric/fabric/tasks.py	2014-07-15 14:26:56.000000000 +0000
+@@ -200,6 +200,10 @@
+     ))
+ 
+ 
++def _is_network_error_ignored():
++    return not state.env.use_exceptions_for['network'] and state.env.skip_bad_hosts
++
++
+ def _execute(task, host, my_env, args, kwargs, jobs, queue, multiprocessing):
+     """
+     Primary single-host work body of execute()
+@@ -238,12 +242,16 @@
+                 # clear what host encountered the exception that will
+                 # print.
+                 if e.__class__ is not SystemExit:
+-                    sys.stderr.write("!!! Parallel execution exception under host %r:\n" % name)
++                    if not (isinstance(e, NetworkError) and
++                            _is_network_error_ignored()):
++                        sys.stderr.write("!!! Parallel execution exception under host %r:\n" % name)
+                     submit(e)
+                 # Here, anything -- unexpected exceptions, or abort()
+                 # driven SystemExits -- will bubble up and terminate the
+                 # child process.
+-                raise
++                if not (isinstance(e, NetworkError) and
++                        _is_network_error_ignored()):
++                    raise
+ 
+         # Stuff into Process wrapper
+         kwarg_dict = {
+@@ -393,7 +401,10 @@
+             ran_jobs = jobs.run()
+             for name, d in ran_jobs.iteritems():
+                 if d['exit_code'] != 0:
+-                    if isinstance(d['results'], BaseException):
++                    if isinstance(d['results'], NetworkError) and \
++                            _is_network_error_ignored():
++                        error(d['results'].message, func=warn, exception=d['results'].wrapped)
++                    elif isinstance(d['results'], BaseException):
+                         error(err, exception=d['results'])
+                     else:
+                         error(err)
+Index: python-fabric/tests/test_network.py
+===================================================================
+--- python-fabric.orig/tests/test_network.py	2014-02-14 17:28:56.000000000 +0000
++++ python-fabric/tests/test_network.py	2014-07-15 14:26:56.000000000 +0000
+@@ -18,6 +18,7 @@
+ from fabric.operations import run, sudo, prompt
+ from fabric.exceptions import NetworkError
+ from fabric.tasks import execute
++from fabric.api import parallel
+ from fabric import utils # for patching
+ 
+ from utils import *
+@@ -547,6 +548,27 @@
+             execute(subtask, hosts=['nope.nonexistent.com'])
+ 
+ 
++@parallel
++def parallel_subtask():
++    run("This should never execute")
++
++class TestParallelConnections(FabricTest):
++    @aborts
++    def test_should_abort_when_cannot_connect(self):
++        """
++        By default, connecting to a nonexistent server should abort.
++        """
++        with hide('everything'):
++            execute(parallel_subtask, hosts=['nope.nonexistent.com'])
++
++    def test_should_warn_when_skip_bad_hosts_is_True(self):
++        """
++        env.skip_bad_hosts = True => execute() skips current host
++        """
++        with settings(hide('everything'), skip_bad_hosts=True):
++            execute(parallel_subtask, hosts=['nope.nonexistent.com'])
++
++
+ class TestSSHConfig(FabricTest):
+     def env_setup(self):
+         super(TestSSHConfig, self).env_setup()
